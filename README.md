@@ -60,6 +60,7 @@ public class ListChatAdapter extends BGAAdapterViewAdapter<ChatModel> {
 }
 ```
 
+
 > RecyclerView实现qq聊天界面的适配器
 
 ```Java
@@ -92,6 +93,92 @@ public class RecyclerChatAdapter extends BGARecyclerViewAdapter<ChatModel> {
         }
     }
 
+}
+```
+
+RecyclerView多Item适配方案
+参考了<a href="https://github.com/tianzhijiexian/Android-Best-Practices/blob/master/2015.10/adapter/adapter.md" target="_blank">Adapter最佳实践</a>的实现方式
+
+> RecyclerView多Item实现qq聊天界面的适配器
+
+```Java
+public class ChatFromItem extends AdapterItem<ChatModel> {
+
+    @Override
+    public @LayoutRes
+    int getLayoutResId() {
+        return R.layout.item_chat_from;
+    }
+
+    @Override
+    public void fillData(BGAViewHolderHelper viewHolderHelper, int position, ChatModel model) {
+        String htmlMsg = String.format(mContext.getString(R.string.color_msg_from), model.mMsg);
+        viewHolderHelper.setHtml(R.id.tv_item_chat_from_msg, htmlMsg);
+    }
+
+    @Override
+    public void setItemChildListener(BGAViewHolderHelper viewHolderHelper) {
+        
+    }
+}
+
+public class ChatToItem extends AdapterItem<ChatModel> {
+
+    @Override
+    public @LayoutRes
+    int getLayoutResId() {
+        return R.layout.item_chat_to;
+    }
+
+    @Override
+    public void fillData(BGAViewHolderHelper viewHolderHelper, int position, ChatModel model) {
+        String htmlMsg = String.format(mContext.getString(R.string.color_msg_to), model.mMsg);
+        viewHolderHelper.setHtml(R.id.tv_item_chat_to_msg, htmlMsg);
+    }
+
+    @Override
+    public void setItemChildListener(BGAViewHolderHelper viewHolderHelper) {
+
+    }
+}
+
+protected void processLogic(Bundle savedInstanceState) {
+    LinearLayoutManager layoutManager = new LinearLayoutManager(mActivity);
+    layoutManager.setOrientation(LinearLayoutManager.VERTICAL);
+    mDataRv.setLayoutManager(layoutManager);
+
+    mAdapter = new BGARecyclerViewMutiAdapter<ChatModel>(mDataRv) {
+
+
+        @Override
+        public Object getItemViewType(ChatModel item) {
+            return item.mUserType;
+        }
+
+        @NonNull
+        @Override
+        public AdapterItem<ChatModel> getItemView(Object type) {
+
+            ChatModel.UserType mUserType = (ChatModel.UserType)type;
+
+            if (mUserType == ChatModel.UserType.From){
+                return new ChatFromItem();
+            }
+
+            return new ChatToItem();
+        }
+    };
+
+    mDatas = DataEngine.loadChatModelDatas();
+    mAdapter.setDatas(mDatas);
+    mDataRv.setAdapter(mAdapter);
+
+    mAdapter.setOnRVItemClickListener(new BGAOnRVItemClickListener() {
+        @Override
+        public void onRVItemClick(ViewGroup parent, View itemView, int position) {
+            Log.d(TAG, "message:" + mAdapter.getItem(position).mMsg);
+        }
+    });
 }
 ```
 
